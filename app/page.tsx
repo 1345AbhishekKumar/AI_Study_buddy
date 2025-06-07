@@ -1,17 +1,17 @@
-import { Navigation } from '@/components/navigation';
-import { HeroSection } from '@/components/hero-section';
-import { TrustedBySection } from '@/components/trusted-by-section';
-import { FeaturesSection } from '@/components/features-section';
-import { CollaborativeSection } from '@/components/collaborative-section';
-import { DemoSection } from '@/components/demo-section';
-import { AppPreviewsSection } from '@/components/app-previews-section';
-import { TestimonialsSection } from '@/components/testimonials-section';
-import { IntegrationsSection } from '@/components/integrations-section';
-import { ComparisonSection } from '@/components/comparison-section';
-import { CTASection } from '@/components/cta-section';
-import { Footer } from '@/components/footer';
+import { Navigation } from '@/components/landing/navigation';
+import { HeroSection } from '@/components/landing/hero-section';
+import { TrustedBySection } from '@/components/landing/trusted-by-section';
+import { FeaturesSection } from '@/components/landing/features-section';
+import { CollaborativeSection } from '@/components/landing/collaborative-section';
+import { DemoSection } from '@/components/landing/demo-section';
+import { AppPreviewsSection } from '@/components/landing/app-previews-section';
+import { TestimonialsSection } from '@/components/landing/testimonials-section';
+import { IntegrationsSection } from '@/components/landing/integrations-section';
+import { ComparisonSection } from '@/components/landing/comparison-section';
+import { CTASection } from '@/components/landing/cta-section';
+import { Footer } from '@/components/landing/footer';
 // import { AIAssistantSection } from '@/components/ai-assistant-section';
-import AIAssistantSection from '@/components/ai-assistant-section';
+import AIAssistantSection from '@/components/landing/ai-assistant-section';
 
 export default function LandingPage() {
   return (

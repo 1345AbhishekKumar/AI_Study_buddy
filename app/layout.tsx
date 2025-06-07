@@ -1,11 +1,13 @@
-import type React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ClerkProvider } from '@clerk/nextjs';
+import { ThemeProvider } from '@/components/landing/theme-provider';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Providers } from '../lib/providers';
 
 // Optimize font loading with display swap
 const inter = Inter({
@@ -96,23 +98,80 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <head>
-        {/* Remove the preload for non-existent image */}
-        {/* <link rel="preload" href="/_next/static/media/3d-illustration.1b0c8b5f.png" as="image" type="image/png" /> */}
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster position="top-center" richColors />
-          <SpeedInsights />
-          {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
-            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
-          )}
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+          <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+              (function() {
+                try {
+                  // Check for saved theme preference or use system preference
+                  const savedTheme = localStorage.getItem('theme');
+                  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                  
+                  console.log('Initial theme setup:', { savedTheme, systemPrefersDark, theme });
+                  
+                  // Apply theme class immediately to prevent flash of default theme
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                  
+                  // Add a class to the body to indicate that we've applied the theme
+                  document.body.classList.add('theme-initialized');
+                  
+                  // Listen for system theme changes when using 'system' preference
+                  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                  const handleSystemThemeChange = (e) => {
+                    if (localStorage.getItem('theme') === 'system') {
+                      console.log('System theme changed to:', e.matches ? 'dark' : 'light');
+                      document.documentElement.classList.toggle('dark', e.matches);
+                    }
+                  };
+                  mediaQuery.addEventListener('change', handleSystemThemeChange);
+                  
+                  // Cleanup
+                  return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+                } catch (e) {
+                  console.error('Error initializing theme:', e);
+                }
+              })();
+            `,
+            }}
+          />
+        </head>
+        <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            enableColorScheme
+            disableTransitionOnChange
+            storageKey="theme"
+            themes={['light', 'dark', 'system']}
+          >
+            <TooltipProvider>
+              <Providers>
+                {children}
+                <Toaster position="top-center" richColors />
+                <SpeedInsights />
+                {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+                  <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+                )}
+              </Providers>
+            </TooltipProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
