@@ -6,17 +6,26 @@ import { serverEnv } from '@/data/env.server';
 import { sendWelcomeEmail } from '@/lib/email';
 
 export async function POST(req: Request) {
+  console.log('Webhook endpoint hit at:', new Date().toISOString());
   const WEBHOOK_SECRET = serverEnv.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local');
+    const error = 'CLERK_WEBHOOK_SECRET is not set in environment variables';
+    console.error(error);
+    return new Response(error, { status: 500 });
   }
 
-  // Get the headers
+  // Get the headers - headers() is synchronous, no await needed
   const headerPayload = headers();
   const svix_id = (await headerPayload).get('svix-id');
   const svix_timestamp = (await headerPayload).get('svix-timestamp');
   const svix_signature = (await headerPayload).get('svix-signature');
+
+  console.log('Received webhook headers:', {
+    'svix-id': svix_id ? 'present' : 'missing',
+    'svix-timestamp': svix_timestamp ? 'present' : 'missing',
+    'svix-signature': svix_signature ? 'present' : 'missing',
+  });
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
@@ -29,7 +38,16 @@ export async function POST(req: Request) {
   const payload = await req.json();
   const body = JSON.stringify(payload);
 
-  // Create a new Svix instance with your secret.
+  console.log('Webhook payload received:', {
+    type: payload.type,
+    data: {
+      id: payload.data?.id,
+      email: payload.data?.email_addresses?.[0]?.email_address,
+      object: payload.data?.object,
+    },
+  });
+
+  // Create a new Svix instance with your secret
   const wh = new Webhook(WEBHOOK_SECRET);
 
   let evt: WebhookEvent;
@@ -42,8 +60,17 @@ export async function POST(req: Request) {
       'svix-signature': svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error('Error verifying webhook:', err);
-    return new Response('Error occurred', {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Error verifying webhook:', {
+      error: errorMessage,
+      headers: {
+        'svix-id': svix_id,
+        'svix-timestamp': svix_timestamp,
+        'svix-signature': svix_signature ? 'present' : 'missing',
+      },
+      body: payload,
+    });
+    return new Response(`Error verifying webhook: ${errorMessage}`, {
       status: 400,
     });
   }
@@ -51,36 +78,86 @@ export async function POST(req: Request) {
   const eventType = evt.type;
 
   if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+    console.log('Processing user.created event:', JSON.stringify(evt.data, null, 2));
+
+    const { id, email_addresses, first_name, last_name, image_url, username } = evt.data;
+
+    console.log('Extracted user data:', {
+      id,
+      email: email_addresses?.[0]?.email_address,
+      first_name,
+      last_name,
+      username,
+      hasImage: !!image_url,
+    });
 
     if (!id || !email_addresses?.[0]?.email_address) {
-      return new Response('Error occurred -- missing required user data', {
+      const errorMessage = 'Missing required user data in webhook payload';
+      console.error(errorMessage, {
+        id,
+        hasEmail: !!email_addresses?.[0]?.email_address,
+        payload: evt.data,
+      });
+
+      return new Response(errorMessage, {
         status: 400,
       });
     }
 
     try {
+      // Use username if first_name and last_name are not available
+      const name =
+        [first_name, last_name].filter(Boolean).join(' ') || username || email_addresses[0].email_address.split('@')[0];
+
       const newUser = {
         clerkId: id,
         email: email_addresses[0].email_address,
-        name: [first_name, last_name].filter(Boolean).join(' '),
+        name: name,
         ...(image_url ? { image: image_url } : {}),
+        role: typeof evt.data.public_metadata?.role === 'string' ? evt.data.public_metadata.role : 'student',
+        status: typeof evt.data.public_metadata?.status === 'string' ? evt.data.public_metadata.status : 'active',
       };
+
+      console.log('Attempting to create user in database with data:', {
+        ...newUser,
+        // Don't log the entire user object to avoid sensitive data in logs
+        image: newUser.image ? '[image-url-present]' : null,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+      });
 
       const { user, error } = await createUser(newUser);
 
       if (error) {
-        console.error('Failed to create user:', error);
-        return new Response('Error creating user', { status: 500 });
+        console.error('Failed to create user in database:', {
+          error: error.message,
+          stack: error.stack,
+          userData: {
+            ...newUser,
+            image: newUser.image ? '[image-url-present]' : null,
+          },
+          timestamp: new Date().toISOString(),
+          environment: process.env.NODE_ENV,
+        });
+
+        return new Response(`Error creating user: ${error.message}`, {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
+
+      console.log('Successfully created user in database:', {
+        userId: user?.id,
+        clerkId: user?.clerkId,
+        email: user?.email,
+        timestamp: new Date().toISOString(),
+      });
 
       // Send welcome email
       try {
         await sendWelcomeEmail({
           to: email_addresses[0].email_address,
           name: [first_name, last_name].filter(Boolean).join(' '),
-          // Add any verification link if needed
-          // verifyLink: `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=...`
         });
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
@@ -107,7 +184,6 @@ export async function POST(req: Request) {
     }
 
     try {
-      // First, get the existing user to update
       const { user: existingUser, error: fetchError } = await getUserById({ clerkUserId: id });
 
       if (fetchError || !existingUser) {
@@ -115,7 +191,6 @@ export async function POST(req: Request) {
         return new Response('User not found', { status: 404 });
       }
 
-      // Prepare updated user data
       const updates: {
         email?: string;
         name?: string;
@@ -132,7 +207,6 @@ export async function POST(req: Request) {
         updates.image = image_url;
       }
 
-      // Only update if there are changes
       if (Object.keys(updates).length > 0) {
         const { user: updatedUser, error: updateError } = await updateUser(existingUser.id, updates);
 
@@ -147,7 +221,6 @@ export async function POST(req: Request) {
         });
       }
 
-      // If no updates were needed, return the existing user
       return new Response(JSON.stringify({ user: existingUser }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -170,7 +243,6 @@ export async function POST(req: Request) {
     }
 
     try {
-      // First, verify the user exists
       const { user: existingUser, error: fetchError } = await getUserById({ clerkUserId: id });
 
       if (fetchError || !existingUser) {

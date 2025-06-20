@@ -1,0 +1,75 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+trigger: glob
+globs: **/*.js,**/*.jsx,**/*.ts,**/*.tsx
+---
+
+Use bun instead of npm, pnpm, for installing packages in my Any Next-js Projects.
+
+# Coding pattern preferences
+
+- Always prefer simple solutions
+- Avoid duplication of code whenever possible, which means checking for other areas of the codebase that might already have similar code and functionality
+- Write code that takes into account the different environments: dev, test, and prod
+- You are careful to only make changes that are requested or you are confident are well understood and related to the change being requested
+- When fixing an issue or bug, do not introduce a new pattern or technology without first exhausting all options for the existing implementation. And if you finally do this, make sure to remove the old implementation afterwards so we don't have duplicate logic.
+- Keep the codebase very clean and organized
+- Avoid writing scripts in files if possible, especially if the script is likely only to be run once
+- Avoid having files over 200–300 lines of code. Refactor at that point.
+- Mocking data is only needed for tests, never mock data for dev or prod
+- Never add stubbing or fake data patterns to code that affects the dev or prod environments
+- Never overwrite my .env file without first asking and confirming
+– Focus on the areas of code relevant to the task  
+– Do not touch code that is unrelated to the task  
+– Write thorough tests for all major functionality  
+– Avoid making major changes to the patterns and architecture of how a feature works, after it has shown to work well, unless explicitly instructed  
+– Always think about what other methods and areas of code might be affected by code changes
+
+
+## General Coding Principles
+
+* Always prefer simple solutions.
+* Avoid code duplication—check if similar functionality already exists.
+* Write code that works across all environments: `dev`, `test`, and `prod`.
+* Only make changes you understand or that are explicitly requested.
+* When fixing issues, avoid introducing new tech/patterns unless necessary. If introduced, remove the old implementation to avoid duplication.
+* Keep the codebase clean, consistent, and organized.
+* Avoid writing scripts that are only run once.
+* Limit files to 200–300 lines. Refactor if it exceeds.
+* Mock data only for **tests**—never mock data in **dev** or **prod** environments.
+* Never include stub or fake data in code that affects `dev` or `prod`.
+* Never overwrite someone else's `.env` file without confirming first.
+* Focus only on code related to the current task.
+* Do not modify code unrelated to your current task.
+* Avoid large refactors or changes to proven features unless instructed.
+* Always consider how changes might affect other parts of the codebase.
+* Write thorough tests for all major features and functionality.
+
+
+
+## General & AI-Aware Coding
+
+* Be explicit in commit messages and PR titles (e.g., "Fix bug in payment form validation").
+* Document new patterns, even small ones — your future self and teammates will thank you.
+* When using AI tools (e.g., ChatGPT, Copilot):
+
+  * Ensure generated code aligns with your team’s standards.
+  * Never copy blindly—always review, adapt, and test thoroughly.
+
+## Team Workflow & Safety
+
+* Never push directly to `main` or `production` branches—always use Pull Requests.
+* Run all tests and verify functionality before merging.
+* When making non-obvious changes, add comments or documentation explaining **why**.
+
+## Project & File Organization
+
+* Store configuration, utilities, and constants in clearly separated folders like `/config`, `/utils`, and `/constants`.
+* Use meaningful file and folder names that clearly reflect purpose and responsibility.
+* Keep documentation (`README.md`, architecture diagrams, etc.) always up-to-date.
+
+

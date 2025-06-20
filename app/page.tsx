@@ -1,33 +1,44 @@
-import { Navigation } from '@/components/landing/navigation';
-import { HeroSection } from '@/components/landing/hero-section';
-import { TrustedBySection } from '@/components/landing/trusted-by-section';
-import { FeaturesSection } from '@/components/landing/features-section';
-import { CollaborativeSection } from '@/components/landing/collaborative-section';
-import { DemoSection } from '@/components/landing/demo-section';
-import { AppPreviewsSection } from '@/components/landing/app-previews-section';
-import { TestimonialsSection } from '@/components/landing/testimonials-section';
-import { IntegrationsSection } from '@/components/landing/integrations-section';
-import { ComparisonSection } from '@/components/landing/comparison-section';
-import { CTASection } from '@/components/landing/cta-section';
-import { Footer } from '@/components/landing/footer';
-// import { AIAssistantSection } from '@/components/ai-assistant-section';
-import AIAssistantSection from '@/components/landing/ai-assistant-section';
+'use client';
 
-export default function LandingPage() {
+import { SparklesAnimation } from '@/components/animations/SparklesAnimation';
+import { AIChatSection } from '@/components/sections/AIChatSection';
+import { AnalyticsSection } from '@/components/sections/AnalyticsSection';
+import { DemoSection } from '@/components/sections/DemoSetion';
+import { FeaturesSection } from '@/components/sections/FeatureSection';
+import { FinalCTASection } from '@/components/sections/FinalCTASection';
+import { Footer } from '@/components/sections/Footer';
+import { HeroSection } from '@/components/sections/HeroSection';
+import { PricingSection } from '@/components/sections/PricingSection';
+import ScienceBackedSection from '@/components/sections/science';
+import { SmartUploadSection } from '@/components/sections/SmartUploadSection';
+import { StudyPlanSection } from '@/components/sections/StudyPlanSection';
+import { TestimonialsSection } from '@/components/sections/TestimonialsSection';
+import { TrustedBySection } from '@/components/sections/TrustedBy';
+import { WhyAISection } from '@/components/sections/WhyAISection';
+import { Navbar1 } from '@/components/sections/navbar-1';
+import StudyPlan from '@/components/sections/plan';
+import ProgressAnalyticsSection from '@/components/sections/progress';
+
+export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navigation />
+    <div className="min-h-screen overflow-x-hidden bg-white text-gray-900 transition-colors duration-300 dark:bg-[#0B0F19] dark:text-[#F5F5F7]">
+      <SparklesAnimation />
+      <Navbar1 />
       <HeroSection />
       <TrustedBySection />
-      <FeaturesSection />
-      <CollaborativeSection />
       <DemoSection />
-      <AppPreviewsSection />
+      <FeaturesSection />
+      <SmartUploadSection />
+      <AIChatSection />
+      <StudyPlanSection />
+      <StudyPlan />
+      <AnalyticsSection />
+      <WhyAISection />
       <TestimonialsSection />
-      <IntegrationsSection />
-      <AIAssistantSection />
-      <ComparisonSection />
-      <CTASection />
+      <ScienceBackedSection />
+      <ProgressAnalyticsSection />
+      <PricingSection />
+      <FinalCTASection />
       <Footer />
     </div>
   );

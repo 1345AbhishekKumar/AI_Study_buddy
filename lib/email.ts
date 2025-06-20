@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
-import { WelcomeEmail } from '@/components/emails/welcome-email';
 import { serverEnv } from '@/data/env.server';
+import { WelcomeEmail } from '@/components/emails/welcome-email';
 
 if (!serverEnv.RESEND_API_KEY) {
   throw new Error('RESEND_API_KEY is not set in environment variables');

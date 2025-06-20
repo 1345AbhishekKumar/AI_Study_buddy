@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uuid, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { quizAttempts, quizzes } from './quiz';
+// import { quizAttempts, quizzes } from './quiz';
 
 // User table
 export const users = pgTable(
@@ -11,6 +11,8 @@ export const users = pgTable(
     email: text('email').notNull().unique(),
     name: text('name'),
     image: text('image'),
+    status: text('status').default('active'),
+    role: text('role').default('student'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
@@ -21,12 +23,6 @@ export const users = pgTable(
     };
   }
 );
-
-// User relations
-export const userRelations = relations(users, ({ many }) => ({
-  quizzes: many(quizzes),
-  quizAttempts: many(quizAttempts),
-}));
 
 // User type export
 export type User = typeof users.$inferSelect;
